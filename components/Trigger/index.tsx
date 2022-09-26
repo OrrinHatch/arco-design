@@ -918,7 +918,7 @@ class Trigger extends PureComponent<TriggerProps, TriggerState> {
     const child: any = this.getChild();
     const popupChildren: any = React.Children.only(popup());
 
-    if (child.props.className) {
+    if (child.props?.className) {
       mergeProps.className = child.props.className;
     }
     if (childrenPrefix && popupVisible) {
