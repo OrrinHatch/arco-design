@@ -1,3 +1,19 @@
+## 2.40.0
+
+2022-09-16
+
+### 💅 样式更新
+
+- 修复 `Statistic` 不传 `prefix` / `suffix` 时，对应 dom 节点仍然渲染的 bug。([#1388](https://github.com/arco-design/arco-design/pull/1388))
+
+## 2.36.0
+
+2022-06-24
+
+### 🆕 功能升级
+
+- `Statistic` 新增 `renderFormat` 参数支持自定义渲染。([#1044](https://github.com/arco-design/arco-design/pull/1044))
+
 ## 2.29.0
 
 2022-02-11

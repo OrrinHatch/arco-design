@@ -1,3 +1,19 @@
+## 2.40.0
+
+2022-09-16
+
+### 💅 Style
+
+- Fix disabled `TabPane` header area hover style in `Tabs` with `capsule` type in dark mode.([#1368](https://github.com/arco-design/arco-design/pull/1368))
+
+## 2.39.0
+
+2022-08-12
+
+### 🐛 BugFix
+
+- Fixed the bug that the width of the `extra` node of Tabs caused an error in the calculation of the head scrolling threshold.([#1275](https://github.com/arco-design/arco-design/pull/1275))
+
 ## 2.33.0
 
 2022-05-13

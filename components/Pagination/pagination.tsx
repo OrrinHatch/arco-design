@@ -1,11 +1,13 @@
-import React, { ReactNode, ReactElement, useState, useEffect, useContext, forwardRef } from 'react';
+import React, { ReactNode, ReactElement, useEffect, useContext, forwardRef } from 'react';
 import PageItem, { StepType, JumpPager, StepPager } from './page-item';
+import useMergeValue from '../_util/hooks/useMergeValue';
 import PageOption from './page-options';
 import PageJumper from './page-jumper';
 import cs from '../_util/classNames';
 import { ConfigContext } from '../ConfigProvider';
 import { PaginationProps } from './interface';
 import useMergeProps from '../_util/hooks/useMergeProps';
+import { pickDataAttributes } from '../_util/pick';
 
 export interface PaginationState {
   current: number;
@@ -28,6 +30,13 @@ function getBufferSize(bufferSize, allPages) {
   return Math.min(newBufferSize, max);
 }
 
+function getAdjustPageSize(sizeOptions?: number[]) {
+  if (sizeOptions && sizeOptions.length) {
+    return sizeOptions[0];
+  }
+  return _defaultPageSize;
+}
+
 const defaultProps: PaginationProps = {
   total: 0,
   pageSizeChangeResetCurrent: true,
@@ -35,7 +44,7 @@ const defaultProps: PaginationProps = {
 };
 
 function Pagination(baseProps: PaginationProps, ref) {
-  const { getPrefixCls, size: ctxSize, locale, componentConfig } = useContext(ConfigContext);
+  const { getPrefixCls, size: ctxSize, locale, componentConfig, rtl } = useContext(ConfigContext);
   const props = useMergeProps<PaginationProps>(
     baseProps,
     defaultProps,
@@ -46,15 +55,24 @@ function Pagination(baseProps: PaginationProps, ref) {
     pageSize: propPageSize,
     current: propCurrent,
     showMore: propShowMore,
+    sizeOptions: propSizeOptions,
     pageSizeChangeResetCurrent,
     defaultCurrent,
     defaultPageSize,
   } = props;
 
-  const [current, setCurrent] = useState(propCurrent || defaultCurrent || _defaultCurrent);
-  const [pageSize, setPageSize] = useState(propPageSize || defaultPageSize || _defaultPageSize);
-  const [total, setTotal] = useState(propTotal);
-  const [showMore, setShowMore] = useState(!!propShowMore);
+  const [current, setCurrent] = useMergeValue(_defaultCurrent, {
+    defaultValue: defaultCurrent,
+    value: propCurrent,
+  });
+
+  const [pageSize, setPageSize] = useMergeValue(getAdjustPageSize(propSizeOptions), {
+    defaultValue: defaultPageSize,
+    value: propPageSize,
+  });
+
+  const total = propTotal;
+  const showMore = !!propShowMore;
 
   if (propCurrent && !props.onChange) {
     console.warn(
@@ -63,28 +81,27 @@ function Pagination(baseProps: PaginationProps, ref) {
     );
   }
 
+  function getAdjustedCurrent(newPageSize, newTotal) {
+    const newAllPages = getAllPages(newPageSize, newTotal);
+    const newCurrent = current > newAllPages ? newAllPages : current;
+    return newCurrent;
+  }
+
   useEffect(() => {
-    if ('total' in props && propTotal !== total) {
-      setTotal(propTotal);
+    // adjust pageSize after sizeOption changes
+    const adjustPageSize = getAdjustPageSize(propSizeOptions);
+    if (!('pageSize' in props)) {
+      setPageSize(adjustPageSize);
     }
+  }, [propSizeOptions]);
 
-    if (!!propShowMore !== showMore) {
-      setShowMore(!!propShowMore);
+  useEffect(() => {
+    // adjust currentPage after total and pageSize changes
+    const newCurrent = getAdjustedCurrent(pageSize, total);
+    if (newCurrent !== current && !('current' in props)) {
+      setCurrent(newCurrent);
     }
-
-    if (propPageSize && propPageSize !== pageSize) {
-      setPageSize(propPageSize);
-      const currentAllPages = getAllPages(propPageSize, propTotal);
-      const nextCurrent = current > currentAllPages ? currentAllPages : current;
-      if (nextCurrent !== current) {
-        setCurrent(nextCurrent);
-      }
-    }
-
-    if (propCurrent && propCurrent !== current) {
-      setCurrent(propCurrent);
-    }
-  }, [propPageSize, propTotal, propShowMore, propCurrent]);
+  }, [total, current, pageSize]);
 
   const onChange = (pageNumber = current, size = pageSize) => {
     const { onChange } = props;
@@ -149,6 +166,7 @@ function Pagination(baseProps: PaginationProps, ref) {
     {
       [`${prefixCls}-simple`]: simple,
       [`${prefixCls}-disabled`]: disabled,
+      [`${prefixCls}-rtl`]: rtl,
     },
     className
   );
@@ -189,7 +207,7 @@ function Pagination(baseProps: PaginationProps, ref) {
             totalPages={allPages}
             current={current}
             onPageChange={onPageNumberChange}
-            simple
+            simple={{ showJumper: typeof showJumper === 'boolean' ? showJumper : true }}
             size={innerSize}
           />
         </li>
@@ -303,7 +321,7 @@ function Pagination(baseProps: PaginationProps, ref) {
   }
 
   return (
-    <div className={classNames} style={style} ref={ref}>
+    <div {...pickDataAttributes(props)} className={classNames} style={style} ref={ref}>
       {totalElement}
       {renderPager}
       <PageOption

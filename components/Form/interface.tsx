@@ -145,8 +145,8 @@ export interface FormProps<
    */
   validateMessages?: Partial<{
     [key in keyof ValidateMessagesTemplateType]: ValidateMessagesTemplateType[key] extends string
-      ? ValidateMessagesTemplateType[key]
-      : Record<keyof ValidateMessagesTemplateType[key], (data, { label }) => any | string>;
+      ? ValidateMessagesTemplateType[key] | ((data, { label }) => any)
+      : Record<keyof ValidateMessagesTemplateType[key], string | ((data, { label }) => any)>;
   }>;
   /**
    * @zh 数据验证成功后回调事件
@@ -194,6 +194,12 @@ export interface RulesProps<FieldValue = any> {
   message?: ReactNode;
 }
 
+export type FormItemChildrenFn<
+  FormData = any,
+  FieldValue = FormData[keyof FormData],
+  FieldKey extends KeyType = keyof FormData
+> = (formData: any, form: FormInstance<FormData, FieldValue, FieldKey>) => React.ReactNode;
+
 /**
  * @title Form.Item
  */
@@ -201,7 +207,7 @@ export interface FormItemProps<
   FormData = any,
   FieldValue = FormData[keyof FormData],
   FieldKey extends KeyType = keyof FormData
-> extends Omit<HTMLAttributes<any>, 'className'> {
+> extends Omit<HTMLAttributes<any>, 'className' | 'children'> {
   style?: CSSProperties;
   className?: string | string[];
   prefixCls?: string;
@@ -339,6 +345,12 @@ export interface FormItemProps<
    */
   formatter?: (value: FieldValue | undefined) => any;
   /**
+   * @zh 依赖的字段。
+   * @en the dependency fields
+   * @version 2.40.0
+   */
+  dependencies?: string[];
+  /**
    * @zh 是否在其他控件值改变时候重新渲染当前区域。设置为true时候，表单的任意改变都会重新渲染该区域。
    * @en Whether to re-render when other FormItem value change. When set to true, any changes to the Form will re-render.
    */
@@ -368,6 +380,7 @@ export interface FormItemProps<
    */
   requiredSymbol?: boolean | { position: 'start' | 'end' };
   isFormList?: boolean;
+  children?: React.ReactNode | FormItemChildrenFn<FormData, FieldValue, FieldKey>;
 }
 
 export interface FormControlProps<
@@ -377,7 +390,9 @@ export interface FormControlProps<
 > {
   /** 受控组件的唯一标示。 */
   field?: FieldKey;
+  _key?: FieldKey;
   initialValue?: FieldValue;
+  dependencies?: FormItemProps['dependencies'];
   getValueFromEvent?: FormItemProps['getValueFromEvent'];
   rules?: RulesProps<FieldValue>[];
   /** 接管子节点，搜集子节点的时机 */
@@ -401,6 +416,7 @@ export interface FormControlProps<
   help?: ReactNode;
   isFormList?: boolean;
   hasFeedback?: boolean;
+  children?: ReactNode;
 }
 
 /**

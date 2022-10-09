@@ -14,12 +14,20 @@ import { CSSTransition } from 'react-transition-group';
 import cs from '../_util/classNames';
 import { isArray, isFunction, isUndefined, isObject } from '../_util/is';
 import Grid from '../Grid';
-import { FormItemProps, FieldError, KeyType, FormContextProps, VALIDATE_STATUS } from './interface';
+import {
+  FormItemProps,
+  FieldError,
+  KeyType,
+  FormContextProps,
+  VALIDATE_STATUS,
+  FormItemChildrenFn,
+} from './interface';
 import Control from './control';
 import {
   FormItemContext as RawFormItemContext,
   FormItemContextType as RawFormItemContextType,
   FormContext,
+  FormListContext,
 } from './context';
 import { ConfigContext } from '../ConfigProvider';
 import omit from '../_util/omit';
@@ -93,6 +101,7 @@ const Item = <
 ) => {
   const { getPrefixCls, prefixCls: prefix } = useContext(ConfigContext);
   const topFormContext = useContext(RawFormItemContext);
+  const formListContext = useContext(FormListContext);
   const [errors, setErrors] = useState<{
     [key: string]: FieldError<FieldValue>;
   }>(null);
@@ -127,6 +136,7 @@ const Item = <
       }
       return newErrors;
     });
+
     setWarnings((current) => {
       const newVal = { ...(current || {}) };
       if (warnings && warnings.length) {
@@ -212,8 +222,14 @@ const Item = <
 
     if (isFunction(children)) {
       return (
-        <Control disabled={disabled} {...(props as any)} {...(field ? { key: field } : {})}>
-          {(...rest) => children(...rest)}
+        <Control
+          disabled={disabled}
+          {...(props as any)}
+          {...(field ? { key: field, _key: field } : {})}
+        >
+          {(...rest) =>
+            children(...(rest as Parameters<FormItemChildrenFn<FormData, FieldValue, FieldKey>>))
+          }
         </Control>
       );
     }
@@ -232,8 +248,9 @@ const Item = <
     }
     if (React.Children.count(children) === 1) {
       if (field) {
+        const key = formListContext?.getItemKey?.(field) || field;
         return (
-          <Control disabled={disabled} {...(props as any)} key={field}>
+          <Control disabled={disabled} {...(props as any)} key={key} _key={key}>
             {children}
           </Control>
         );
@@ -371,7 +388,7 @@ export default ItemComponent as <
   FieldValue = FormData[keyof FormData],
   FieldKey extends KeyType = keyof FormData
 >(
-  props: React.PropsWithChildren<FormItemProps<FormData, FieldValue, FieldKey>> & {
+  props: FormItemProps<FormData, FieldValue, FieldKey> & {
     ref?: React.Ref<typeof Row['prototype']>;
   }
 ) => React.ReactElement;

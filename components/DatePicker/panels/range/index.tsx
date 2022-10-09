@@ -34,7 +34,7 @@ interface InnerRangePickerProps extends RangePickerProps {
   onSuperNext?: () => void;
   localeName?: string;
   onTimePickerSelect?: (index: number, timeString: string, time: Dayjs) => void;
-  setRangePageShowDates?: (dates: Dayjs[], mode: ModeType, index: number) => void;
+  setRangePageShowDates?: (dates: Dayjs[], index: number) => void;
   disabledTimePickerIndex?: number;
   timeValues?: Dayjs[];
   isTimePanel?: boolean;
@@ -55,7 +55,6 @@ function RangePicker(props: InnerRangePickerProps & PrivateCType) {
   const {
     mode = 'date',
     showTime,
-    dayStartOfWeek = 0,
     disabledDate,
     disabledTime,
     format,
@@ -135,7 +134,6 @@ function RangePicker(props: InnerRangePickerProps & PrivateCType) {
 
     const pickerProps = {
       ...basePickerProps,
-      dayStartOfWeek,
       localeName,
       popupVisible,
       timepickerProps,
@@ -148,13 +146,13 @@ function RangePicker(props: InnerRangePickerProps & PrivateCType) {
       return (
         <>
           <WeekPickerPanel
-            setPageShowDate={(d) => setRangePageShowDates([d, d], 'week', 0)}
+            setPageShowDate={(d) => setRangePageShowDates([d, d], 0)}
             {...startOperations}
             {...pickerProps}
             {...startPickerProps}
           />
           <WeekPickerPanel
-            setPageShowDate={(d) => setRangePageShowDates([d, d], 'week', 1)}
+            setPageShowDate={(d) => setRangePageShowDates([d, d], 1)}
             {...endOperations}
             {...pickerProps}
             {...endPickerProps}
@@ -197,7 +195,7 @@ function RangePicker(props: InnerRangePickerProps & PrivateCType) {
             onSelectTime(0, timeString, time);
           }}
           index={0}
-          setPageShowDate={(d) => setRangePageShowDates([d, d], 'date', 0)}
+          setPageShowDate={(d) => setRangePageShowDates([d, d], 0)}
           timeValue={timeValues[0]}
           {...startPickerProps}
         />
@@ -210,7 +208,7 @@ function RangePicker(props: InnerRangePickerProps & PrivateCType) {
             onSelectTime(1, timeString, time);
           }}
           index={1}
-          setPageShowDate={(d) => setRangePageShowDates([d, d], 'date', 1)}
+          setPageShowDate={(d) => setRangePageShowDates([d, d], 1)}
           timeValue={timeValues[1]}
           {...endPickerProps}
         />
@@ -231,13 +229,13 @@ function RangePicker(props: InnerRangePickerProps & PrivateCType) {
     return (
       <>
         <MonthPickerPanel
-          setPageShowDate={(d) => setRangePageShowDates([d, d], 'month', 0)}
+          setPageShowDate={(d) => setRangePageShowDates([d, d], 0)}
           {...startOperations}
           {...pickerProps}
           {...startPickerProps}
         />
         <MonthPickerPanel
-          setPageShowDate={(d) => setRangePageShowDates([d, d], 'month', 1)}
+          setPageShowDate={(d) => setRangePageShowDates([d, d], 1)}
           {...endOperations}
           {...pickerProps}
           {...endPickerProps}
@@ -277,13 +275,13 @@ function RangePicker(props: InnerRangePickerProps & PrivateCType) {
     return (
       <>
         <QuarterPickerPanel
-          setPageShowDate={(d) => setRangePageShowDates([d, d], 'quarter', 0)}
+          setPageShowDate={(d) => setRangePageShowDates([d, d], 0)}
           {...startOperations}
           {...pickerProps}
           {...startPickerProps}
         />
         <QuarterPickerPanel
-          setPageShowDate={(d) => setRangePageShowDates([d, d], 'quarter', 1)}
+          setPageShowDate={(d) => setRangePageShowDates([d, d], 1)}
           {...endOperations}
           {...pickerProps}
           {...endPickerProps}
@@ -305,7 +303,6 @@ function RangePicker(props: InnerRangePickerProps & PrivateCType) {
 }
 
 RangePicker.defaultProps = {
-  dayStartOfWeek: 0,
   pickerType: 'range',
 };
 

@@ -1,4 +1,4 @@
-import React, { useContext, useMemo } from 'react';
+import React, { CSSProperties, useContext, useMemo } from 'react';
 import { ConfigContext } from '../ConfigProvider';
 import { TransferProps, TransferListProps, TransferItem, TransferListType } from './interface';
 import cs from '../_util/classNames';
@@ -9,6 +9,7 @@ import IconRight from '../../icon/react-icon/IconRight';
 import useMergeValue from '../_util/hooks/useMergeValue';
 import { isObject } from '../_util/is';
 import useMergeProps from '../_util/hooks/useMergeProps';
+import { pickDataAttributes } from '../_util/pick';
 
 const defaultProps: TransferProps = {
   titleTexts: ['Source', 'Target'],
@@ -21,14 +22,13 @@ const defaultProps: TransferProps = {
 };
 
 function Transfer(baseProps: TransferProps, ref) {
-  const { getPrefixCls, componentConfig } = useContext(ConfigContext);
+  const { getPrefixCls, componentConfig, rtl } = useContext(ConfigContext);
   const props = useMergeProps<TransferProps>(baseProps, defaultProps, componentConfig?.Transfer);
   const {
     prefixCls: transferPrefixCls,
     style,
     className,
     children,
-    listStyle,
     dataSource,
     defaultTargetKeys,
     defaultSelectedKeys,
@@ -207,11 +207,26 @@ function Transfer(baseProps: TransferProps, ref) {
   const renderList = (listType: TransferListType) => {
     const info = listType === 'source' ? sourceInfo : targetInfo;
     const isTarget = listType === 'target';
+    const usedRestProps = { ...restProps };
+
+    Object.entries(usedRestProps).forEach(([key, value]) => {
+      const propertiesCanBeArray = [
+        'searchPlaceholder',
+        'showSearch',
+        'showFooter',
+        'pagination',
+        'listStyle',
+      ];
+      if (propertiesCanBeArray.indexOf(key) > -1) {
+        usedRestProps[key] = Array.isArray(value) ? value[listType === 'source' ? 0 : 1] : value;
+      }
+    });
+
     return (
       <TransferList
         {...info}
-        {...restProps}
-        style={listStyle}
+        {...(usedRestProps as TransferListProps)}
+        style={usedRestProps.listStyle as CSSProperties}
         prefixCls={prefixCls}
         className={`${prefixCls}-view-${listType}`}
         listType={listType}
@@ -222,18 +237,23 @@ function Transfer(baseProps: TransferProps, ref) {
         handleSelect={(newSelectKeys) => handleSelect(newSelectKeys, listType)}
         handleRemove={(removeKeys) => moveTo(isTarget ? 'source' : 'target', removeKeys)}
         onSearch={(value) => onSearch && onSearch(value, listType)}
+        renderHeaderUnit={(countSelected, countAll) =>
+          `${mergedOneWay ? '' : `${countSelected} / `}${countAll}`
+        }
       />
     );
   };
 
   return (
     <div
+      {...pickDataAttributes(props)}
       ref={ref}
       className={cs(
         prefixCls,
         {
           [`${prefixCls}-simple`]: simple,
           [`${prefixCls}-disabled`]: disabled,
+          [`${prefixCls}-rtl`]: rtl,
         },
         className
       )}

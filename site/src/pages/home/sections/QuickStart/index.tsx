@@ -1,5 +1,5 @@
 import React from 'react';
-import { teaLog } from '@arco-design/arco-site-utils';
+import { teaLog } from '@arco-materials/site-utils';
 import cs from '../../utils/classNames';
 import CodeCopy from '../../components/CodeCopy';
 import LogoWrapper from '../../components/LogoWrapper';
@@ -22,10 +22,10 @@ export default function QuickStart() {
 
   const renderDesignContent = () => {
     return (
-      <div
+      <a
+        href={linkFigmaArcoComponent}
         className={styles['design-terminal']}
         onClick={() => {
-          window.open(linkFigmaArcoComponent);
           teaLog(EventMap.clickQuickStartBtn, {
             link: linkFigmaArcoComponent,
             name: `Figma ${locale['quickStart.block.design.componentResource.title']}`,
@@ -40,7 +40,7 @@ export default function QuickStart() {
         <span className={styles['design-terminal-content']}>
           {locale['quickStart.block.design.componentResource.title']}
         </span>
-      </div>
+      </a>
     );
   };
 

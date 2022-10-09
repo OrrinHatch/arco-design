@@ -1,3 +1,19 @@
+## 2.40.0
+
+2022-09-16
+
+### 🆕 功能升级
+
+- `Notification` 组件支持 `useNotification` 用法以便读取 `context`([#1401](https://github.com/arco-design/arco-design/pull/1401))
+
+## 2.33.1
+
+2022-05-20
+
+### 🐛 问题修复
+
+- 修复 `Notification` 设置 `prefixCls` 后，提示图标前缀未改变的 bug。([#887](https://github.com/arco-design/arco-design/pull/887))
+
 ## 2.32.1
 
 2022-04-22

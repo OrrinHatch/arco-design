@@ -1,3 +1,19 @@
+## 2.40.0
+
+2022-09-16
+
+### 🆕 Feature
+
+- `Notification` component supports `useNotification` usage for reading `context`([#1401](https://github.com/arco-design/arco-design/pull/1401))
+
+## 2.33.1
+
+2022-05-20
+
+### 🐛 BugFix
+
+- Fixed a bug that the prefix of the prompt icon did not change after `Notification` was set to `prefixCls`.([#887](https://github.com/arco-design/arco-design/pull/887))
+
 ## 2.32.1
 
 2022-04-22

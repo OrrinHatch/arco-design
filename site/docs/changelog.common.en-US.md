@@ -1,3 +1,46 @@
+## 2.39.3
+
+2022-09-02
+
+### 💎 Enhancement
+
+- Optimized `Modal`, `Notification`, `Message` components to render nodes via `createRoot` in React 18.([#1367](https://github.com/arco-design/arco-design/pull/1367))
+
+## 2.39.2
+
+2022-08-26
+
+### 🐛 BugFix
+
+- Fix server-side rendering error due to auto-generated DOM `id`.([#1334](https://github.com/arco-design/arco-design/pull/1334))
+- Fixed the problem that the `Select` component was repeatedly introduced when the `Cascader` / `TreeSelect` style was introduced by on-demand loading([#1327](https://github.com/arco-design/arco-design/pull/1327))
+
+## 2.39.1
+
+2022-08-19
+
+### 💎 Enhancement
+
+- Export prop `version`.([#1303](https://github.com/arco-design/arco-design/pull/1303))
+
+## 2.35.0
+
+2022-06-10
+
+### 🐛 BugFix
+
+- Adjust `Popconfirm`, `Popover`, `Tooltip` component animation pop-up effect to avoid page jitter caused by overshoot effect in border scenes.([#986](https://github.com/arco-design/arco-design/pull/986))
+
+## 2.34.0
+
+2022-05-27
+
+### 🆕 Feature
+
+- Added Arabic.([#932](https://github.com/arco-design/arco-design/pull/932))
+- Added Portuguese.([#924](https://github.com/arco-design/arco-design/pull/924))
+- Added Russian.([#922](https://github.com/arco-design/arco-design/pull/922))
+
 ## 2.33.0
 
 2022-05-13

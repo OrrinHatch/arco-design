@@ -17,6 +17,8 @@ const noAnchorPaths = [
   '/react/en-US/docs/overview',
   '/react/docs/changelog',
   '/react/en-US/docs/changelog',
+  '/react/docs/token',
+  '/react/en-US/docs/token',
 ];
 
 function Components() {
@@ -93,7 +95,7 @@ function Components() {
         )}
       </div>
       <ThemeBox lang={lang} />
-      <BackTop style={{ right: 70, bottom: 80 }}>
+      <BackTop className="ac-back-top">
         <Button shape="circle" size="large" className="ac-backtop-btn">
           <IconUp />
         </Button>

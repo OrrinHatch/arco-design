@@ -14,7 +14,7 @@ import { CSSTransition } from 'react-transition-group';
 import FocusLock from 'react-focus-lock';
 import IconClose from '../../icon/react-icon/IconClose';
 import cs from '../_util/classNames';
-import { isServerRendering } from '../_util/dom';
+import { isServerRendering, contains } from '../_util/dom';
 import { Esc } from '../_util/keycode';
 import Button from '../Button';
 import Portal from '../Portal';
@@ -103,7 +103,7 @@ function Modal(baseProps: PropsWithChildren<ModalProps>, ref) {
 
   const modalWrapperRef = useRef<HTMLDivElement>(null);
   const contentWrapper = useRef<HTMLDivElement>(null);
-  const [wrapperVisible, setWrapperVisible] = useState(visible);
+  const [wrapperVisible, setWrapperVisible] = useState<boolean>();
   const [popupZIndex, setPopupZIndex] = useState<number>();
   const cursorPositionRef = useRef<CursorPositionType>(null);
   const haveOriginTransformOrigin = useRef<boolean>(false);
@@ -121,7 +121,7 @@ function Modal(baseProps: PropsWithChildren<ModalProps>, ref) {
   });
 
   const prefixCls = context.getPrefixCls('modal', props.prefixCls);
-  const { locale } = context;
+  const { locale, rtl } = context;
 
   // 简洁模式下默认不显示关闭按钮
   const defaultClosable = !simple;
@@ -181,7 +181,9 @@ function Modal(baseProps: PropsWithChildren<ModalProps>, ref) {
     let timer = null;
     if (escToExit) {
       timer = setTimeout(() => {
-        modalWrapperRef.current?.focus();
+        if (contains(document.body, modalWrapperRef.current)) {
+          modalWrapperRef.current?.focus();
+        }
       });
     }
     return () => {
@@ -214,15 +216,14 @@ function Modal(baseProps: PropsWithChildren<ModalProps>, ref) {
         {okText || locale.Modal.okText}
       </Button>
     );
-    let footerContent = footer || (
-      <>
-        {!hideCancel && cancelButtonNode}
-        {okButtonNode}
-      </>
-    );
-    if (isFunction(footer)) {
-      footerContent = footer(cancelButtonNode, okButtonNode);
-    }
+    const footerContent = isFunction(footer)
+      ? footer(cancelButtonNode, okButtonNode)
+      : footer || (
+          <>
+            {!hideCancel && cancelButtonNode}
+            {okButtonNode}
+          </>
+        );
 
     return <div className={`${prefixCls}-footer`}>{footerContent}</div>;
   };
@@ -281,11 +282,13 @@ function Modal(baseProps: PropsWithChildren<ModalProps>, ref) {
   const modalDom = (
     <div
       role="dialog"
+      aria-modal="true"
       {...ariaProps}
       className={cs(
         prefixCls,
         {
           [`${prefixCls}-simple`]: simple,
+          [`${prefixCls}-rtl`]: rtl,
         },
         className
       )}
@@ -293,6 +296,7 @@ function Modal(baseProps: PropsWithChildren<ModalProps>, ref) {
     >
       {innerFocusLock ? (
         <FocusLock
+          crossFrame={false}
           disabled={!visible}
           autoFocus={innerAutoFocus}
           lockProps={{
@@ -303,7 +307,7 @@ function Modal(baseProps: PropsWithChildren<ModalProps>, ref) {
           {element}
         </FocusLock>
       ) : (
-        element
+        <>{element}</>
       )}
     </div>
   );
@@ -361,6 +365,7 @@ function Modal(baseProps: PropsWithChildren<ModalProps>, ref) {
             {
               [`${prefixCls}-wrapper-no-mask`]: !mask,
               [`${prefixCls}-wrapper-align-center`]: alignCenter,
+              [`${prefixCls}-wrapper-rtl`]: rtl,
             },
             wrapClassName
           )}

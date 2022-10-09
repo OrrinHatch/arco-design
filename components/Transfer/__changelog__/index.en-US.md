@@ -1,3 +1,35 @@
+## 2.40.0
+
+2022-09-16
+
+### 🆕 Feature
+
+- The `showSearch / showFooter / searchPlaceholder / pagination / listStyle` properties of `Transfer` support passing in different property values for source/target lists via arrays.([#1389](https://github.com/arco-design/arco-design/pull/1389))
+
+## 2.37.0
+
+2022-07-08
+
+### 💅 Style
+
+- Fixed an issue where the drag flag of the first item in the list might be obscured by the container when `Transfer` is draggable.([#1103](https://github.com/arco-design/arco-design/pull/1103))
+
+## 2.36.0
+
+2022-06-24
+
+### 💎 Enhancement
+
+- Optimized the display of the `Transfer` component in `simple` mode for the current number of options in the list.([#1045](https://github.com/arco-design/arco-design/pull/1045))
+
+## 2.34.0
+
+2022-05-27
+
+### 🐛 BugFix
+
+- Fix the bug that the `onItemSelectAll` method does not work when `Transfer` customizes the list.([#903](https://github.com/arco-design/arco-design/pull/903))
+
 ## 2.30.1
 
 2022-03-11

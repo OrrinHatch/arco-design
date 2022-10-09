@@ -4,6 +4,7 @@ import { CSSTransition } from 'react-transition-group';
 import ResizeObserverPolyfill from 'resize-observer-polyfill';
 import { on, off, contains, getScrollElements } from '../_util/dom';
 import { isFunction } from '../_util/is';
+import { pickDataAttributes } from '../_util/pick';
 import { Esc } from '../_util/keycode';
 import Portal from './portal';
 import ResizeObserver from '../_util/resizeObserver';
@@ -83,6 +84,7 @@ const defaultProps = {
   clickOutsideToClose: true,
   escToClose: false,
   mouseLeaveToClose: true,
+  containerScrollToClose: false,
   getDocument: () => window.document as any,
   autoFixPosition: true,
   mouseEnterDelay: 100,
@@ -138,6 +140,8 @@ class Trigger extends PureComponent<TriggerProps, TriggerState> {
 
   unmount = false;
 
+  isDidMount = false;
+
   // 保存鼠标的位置
   mouseLocation: MouseLocationType = {
     clientX: 0,
@@ -186,16 +190,16 @@ class Trigger extends PureComponent<TriggerProps, TriggerState> {
   }
 
   getRootElement = (): HTMLElement => {
-    return findDOMNode(this) as HTMLElement;
+    this.childrenDom = findDOMNode(this) as HTMLElement;
+    return this.childrenDom;
   };
-
-  isDidMount = false;
 
   componentDidMount() {
     this.componentDidUpdate(this.getMergedProps());
     this.isDidMount = true;
+    this.unmount = false;
 
-    this.childrenDom = findDOMNode(this);
+    this.childrenDom = this.getRootElement();
     if (this.state.popupVisible) {
       this.childrenDomSize = getDOMPos(this.childrenDom);
     }
@@ -226,7 +230,7 @@ class Trigger extends PureComponent<TriggerProps, TriggerState> {
     }
     // popupVisible为true
     this.onContainerResize();
-    if (currentProps.updateOnScroll) {
+    if (currentProps.updateOnScroll || currentProps.containerScrollToClose) {
       this.onContainersScroll();
     }
     if (!this.handleWindowResize) {
@@ -258,7 +262,7 @@ class Trigger extends PureComponent<TriggerProps, TriggerState> {
 
   offScrollListeners = () => {
     (this.scrollElements || []).forEach((item) => {
-      off(item, 'scroll', this.handleUpdatePosition);
+      off(item, 'scroll', this.handleScroll);
     });
     this.scrollElements = null;
   };
@@ -275,6 +279,16 @@ class Trigger extends PureComponent<TriggerProps, TriggerState> {
     }
   };
 
+  handleScroll = () => {
+    const currentProps = this.getMergedProps();
+
+    if (currentProps.containerScrollToClose) {
+      this.setPopupVisible(false);
+    } else if (currentProps.updateOnScroll) {
+      this.handleUpdatePosition();
+    }
+  };
+
   onContainersScroll = () => {
     if (this.scrollElements) {
       return;
@@ -282,7 +296,7 @@ class Trigger extends PureComponent<TriggerProps, TriggerState> {
     this.scrollElements = getScrollElements(this.childrenDom, this.popupContainer?.parentNode);
 
     this.scrollElements.forEach((item) => {
-      on(item, 'scroll', this.handleUpdatePosition);
+      on(item, 'scroll', this.handleScroll);
     });
   };
 
@@ -373,7 +387,7 @@ class Trigger extends PureComponent<TriggerProps, TriggerState> {
   };
 
   getTransformOrigin = (position) => {
-    const content = findDOMNode(this.triggerRef) as HTMLElement;
+    const content = this.triggerRef as HTMLElement;
     if (!content) return {};
 
     const { showArrow, classNames } = this.getMergedProps();
@@ -439,8 +453,8 @@ class Trigger extends PureComponent<TriggerProps, TriggerState> {
       return;
     }
     const mountContainer = this.popupContainer as Element;
-    const content = findDOMNode(this.triggerRef) as HTMLElement;
-    const child: HTMLElement = findDOMNode(this) as HTMLElement;
+    const content = this.triggerRef;
+    const child: HTMLElement = this.getRootElement();
     const { style, arrowStyle, realPosition } = getStyle(
       this.getMergedProps(),
       content,
@@ -566,8 +580,8 @@ class Trigger extends PureComponent<TriggerProps, TriggerState> {
   // 点击非popup内部，非children内部的节点，触发clickoutside 逻辑
   onClickOutside = (e) => {
     const { onClickOutside, clickOutsideToClose } = this.getMergedProps();
-    const triggerNode = findDOMNode(this.triggerRef);
-    const childrenDom = findDOMNode(this);
+    const triggerNode = this.triggerRef;
+    const childrenDom = this.getRootElement();
 
     if (
       !contains(triggerNode, e.target) &&
@@ -784,9 +798,11 @@ class Trigger extends PureComponent<TriggerProps, TriggerState> {
       const gpc = getPopupContainer || getGlobalPopupContainer;
 
       const rootElement = this.getRootElement();
+
       const parent = gpc(rootElement);
       if (parent) {
         parent.appendChild(node);
+
         return;
       }
     }
@@ -860,7 +876,7 @@ class Trigger extends PureComponent<TriggerProps, TriggerState> {
       popupStyle: dropdownPopupStyle,
     } = this.getMergedProps();
     const isExistChildren = children || children === 0;
-    const { getPrefixCls, zIndex } = this.context;
+    const { getPrefixCls, zIndex, rtl } = this.context;
     const { popupVisible, popupStyle } = this.state;
 
     if (!popup) {
@@ -937,6 +953,7 @@ class Trigger extends PureComponent<TriggerProps, TriggerState> {
       prefixCls,
       childrenPrefix,
       `${prefixCls}-position-${position}`,
+      { [`${prefixCls}-rtl`]: rtl },
       className
     );
 
@@ -1007,6 +1024,7 @@ class Trigger extends PureComponent<TriggerProps, TriggerState> {
             }
             {...popupEventProps}
             className={popupClassName}
+            {...pickDataAttributes(this.props)}
           >
             <popupChildren.type
               ref={popupChildren.ref}

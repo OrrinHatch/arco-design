@@ -11,7 +11,7 @@ import useShowFooter from './utils/hooks/useShowFooter';
 import useImageStatus from './utils/hooks/useImageStatus';
 import useMergeValue from '../_util/hooks/useMergeValue';
 import omit from '../_util/omit';
-import { isNumber } from '../_util/is';
+import { isNumber, isUndefined } from '../_util/is';
 import { PreviewGroupContext } from './previewGroupContext';
 import { isServerRendering } from '../_util/dom';
 import useMergeProps from '../_util/hooks/useMergeProps';
@@ -26,7 +26,7 @@ const defaultProps: ImagePropsType = {
 };
 
 function Image(baseProps: ImagePropsType, ref: LegacyRef<HTMLDivElement>) {
-  const { getPrefixCls, componentConfig } = useContext(ConfigContext);
+  const { getPrefixCls, componentConfig, rtl } = useContext(ConfigContext);
   const props = useMergeProps<ImagePropsType>(baseProps, defaultProps, componentConfig?.Image);
   const {
     style,
@@ -48,13 +48,16 @@ function Image(baseProps: ImagePropsType, ref: LegacyRef<HTMLDivElement>) {
     onClick,
     index,
     _index,
+    onError,
+    onLoad,
     ...restProps
   } = props;
 
   const {
     previewGroup,
-    setVisible: setGroupPreviewVisible,
+    handleVisibleChange: handleGroupVisibleChange,
     registerPreviewUrl,
+    registerPreviewProps,
     setCurrentIndex,
   } = useContext(PreviewGroupContext);
   const previewSrc = previewProps.src || src;
@@ -74,7 +77,7 @@ function Image(baseProps: ImagePropsType, ref: LegacyRef<HTMLDivElement>) {
     value: previewProps.visible,
   });
 
-  // Props passed directly into Preivew component
+  // Props passed directly into Preview component
   const availablePreviewProps = omit(previewProps, [
     'visible',
     'defaultVisible',
@@ -83,40 +86,41 @@ function Image(baseProps: ImagePropsType, ref: LegacyRef<HTMLDivElement>) {
   ]);
 
   const prefixCls = getPrefixCls('image');
+  const isControlled = !isUndefined(previewProps.visible);
   const classNames = cs(
     prefixCls,
     {
+      [`${prefixCls}-rtl`]: rtl,
       [`${prefixCls}-simple`]: simple,
       [`${prefixCls}-loading`]: isLoading,
       [`${prefixCls}-loading-error`]: isError,
       [`${prefixCls}-with-footer-inner`]: isLoaded && showFooter && footerPosition === 'inner',
       [`${prefixCls}-with-footer-outer`]: isLoaded && showFooter && footerPosition === 'outer',
+      [`${prefixCls}-with-preview`]: isLoaded && preview && !isError && !isControlled,
     },
     className
   );
 
   const refImg = useRef<HTMLImageElement>();
 
-  function onImgLoaded() {
+  function onImgLoaded(e) {
     setStatus('loaded');
+    onLoad && onLoad(e);
   }
 
-  function onImgLoadError() {
+  function onImgLoadError(e) {
     setStatus('error');
+    onError && onError(e);
   }
 
   function onImgClick(e) {
     if (preview && previewGroup) {
       setCurrentIndex(id);
-      setGroupPreviewVisible(true);
+      handleGroupVisibleChange(true);
     } else if (preview) {
       togglePreviewVisible(true);
     }
     onClick && onClick(e);
-  }
-
-  function onPreviewVisibleChange(visible) {
-    togglePreviewVisible(visible);
   }
 
   function togglePreviewVisible(newVisible) {
@@ -133,8 +137,10 @@ function Image(baseProps: ImagePropsType, ref: LegacyRef<HTMLDivElement>) {
   useEffect(() => {
     if (!previewGroup) return;
     const unRegister = registerPreviewUrl(id, previewSrc, preview);
+    const unRegisterPreviewProps = registerPreviewProps(id, availablePreviewProps);
     return () => {
       unRegister(id);
+      unRegisterPreviewProps(id);
     };
   }, [previewGroup]);
 
@@ -201,7 +207,7 @@ function Image(baseProps: ImagePropsType, ref: LegacyRef<HTMLDivElement>) {
           visible={previewVisible}
           src={previewSrc}
           {...availablePreviewProps}
-          onVisibleChange={onPreviewVisibleChange}
+          onVisibleChange={togglePreviewVisible}
         />
       )}
     </div>

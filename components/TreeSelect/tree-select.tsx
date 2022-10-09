@@ -19,7 +19,13 @@ import Tree from '../Tree';
 import { ConfigContext } from '../ConfigProvider';
 import { getAllCheckedKeysByCheck } from '../Tree/util';
 import SelectView from '../_class/select-view';
-import { TreeSelectProps, LabelValue, DefaultFieldNames, RefTreeSelectType } from './interface';
+import {
+  TreeSelectProps,
+  LabelValue,
+  DefaultFieldNames,
+  RefTreeSelectType,
+  InputValueChangeReason,
+} from './interface';
 import useTreeData from './hook/useTreeData';
 import useKeyCache from './hook/useKeyCache';
 import TreeList from './tree-list';
@@ -27,6 +33,8 @@ import { NodeProps } from '../Tree/interface';
 import useMergeValue from '../_util/hooks/useMergeValue';
 import cs from '../_util/classNames';
 import useMergeProps from '../_util/hooks/useMergeProps';
+import useIsFirstRender from '../_util/hooks/useIsFirstRender';
+import useId from '../_util/hooks/useId';
 
 function isEmptyValue(value) {
   return (
@@ -35,9 +43,6 @@ function isEmptyValue(value) {
     (isObject(value) && Object.keys(value).length === 0)
   );
 }
-
-// Generate DOM id for instance
-let globalTreeSelectIndex = 0;
 
 const defaultProps: TreeSelectProps = {
   bordered: true,
@@ -49,13 +54,13 @@ const TreeSelect: ForwardRefRenderFunction<
   RefTreeSelectType,
   PropsWithChildren<TreeSelectProps>
 > = (baseProps: PropsWithChildren<TreeSelectProps>, ref) => {
-  const { getPrefixCls, renderEmpty, componentConfig } = useContext(ConfigContext);
+  const { getPrefixCls, renderEmpty, componentConfig, rtl } = useContext(ConfigContext);
   const props = useMergeProps<PropsWithChildren<TreeSelectProps>>(
     baseProps,
     defaultProps,
     componentConfig?.TreeSelect
   );
-
+  const refIsFirstRender = useIsFirstRender();
   const triggerRef = useRef<Trigger>();
   const treeRef = useRef(null);
   const refSelectView = useRef(null);
@@ -66,8 +71,17 @@ const TreeSelect: ForwardRefRenderFunction<
   const [popupVisible, setPopupVisible] = useMergeValue<boolean>(false, {
     value: props.popupVisible,
   });
-  const [inputValue, setInputValue] = useState<string>();
-
+  const [inputValue, setInputValue] = useMergeValue<string>(
+    undefined, // Compatible with previous behavior 'undefined as default'
+    {
+      value: 'inputValue' in props ? props.inputValue || '' : undefined,
+    }
+  );
+  // 触发 onInputValueChange 回调的值
+  const refOnInputChangeCallbackValue = useRef(inputValue);
+  // 触发 onInputValueChange 回调的原因
+  const refOnInputChangeCallbackReason = useRef<InputValueChangeReason>(null);
+  const { onInputValueChange } = props;
   const [value, setValue] = useStateValue(props, key2nodeProps, indeterminateKeys);
 
   const multiple = props.multiple || props.treeCheckable;
@@ -76,11 +90,20 @@ const TreeSelect: ForwardRefRenderFunction<
   const isFilterNode = inputValue && !isFunction(props.onSearch);
 
   // Unique ID of this select instance
-  const instancePopupID = useMemo<string>(() => {
-    const id = `${prefixCls}-popup-${globalTreeSelectIndex}`;
-    globalTreeSelectIndex++;
-    return id;
-  }, []);
+  const instancePopupID = useId(`${prefixCls}-popup-`);
+
+  // 尝试更新 inputValue，并触发 onInputValueChange
+  const tryUpdateInputValue = (value: string, reason: InputValueChangeReason) => {
+    if (
+      value !== refOnInputChangeCallbackValue.current ||
+      reason !== refOnInputChangeCallbackReason.current
+    ) {
+      setInputValue(value);
+      refOnInputChangeCallbackValue.current = value;
+      refOnInputChangeCallbackReason.current = reason;
+      onInputValueChange && onInputValueChange(value, reason);
+    }
+  };
 
   const handleSearch = useCallback(
     (inputText) => {
@@ -97,6 +120,7 @@ const TreeSelect: ForwardRefRenderFunction<
           const nodeProps = key2nodeProps[key];
           let isHit = false;
           if (isFunction(props.filterTreeNode)) {
+            // @ts-ignore
             if (props.filterTreeNode(inputText, <Tree.Node {...nodeProps} />)) {
               isHit = true;
             }
@@ -126,7 +150,7 @@ const TreeSelect: ForwardRefRenderFunction<
     }
 
     if (props.multiple && !retainInputValueWhileSelect) {
-      setInputValue('');
+      tryUpdateInputValue('', 'optionChecked');
       handleSearch('');
     }
   };
@@ -192,14 +216,16 @@ const TreeSelect: ForwardRefRenderFunction<
   }, [inputValue, key2nodeProps, hitKeys]);
 
   useEffect(() => {
-    popupVisible &&
+    if (popupVisible) {
       setTimeout(() => {
         const target = value[0];
         if (treeRef.current && target) {
           treeRef.current.scrollIntoView(target.value);
         }
       });
-    inputValue && setInputValue('');
+    } else if (!refIsFirstRender) {
+      inputValue && tryUpdateInputValue('', 'optionListHide');
+    }
   }, [popupVisible]);
 
   useImperativeHandle(ref, () => ({
@@ -222,6 +248,10 @@ const TreeSelect: ForwardRefRenderFunction<
     const { label = '', disabled } = val || {};
     return { text: label, disabled };
   }, []);
+
+  const tryUpdateSelectValue = (value: LabelValue[]) => {
+    setValue(value, {});
+  };
 
   return (
     <Trigger
@@ -258,7 +288,7 @@ const TreeSelect: ForwardRefRenderFunction<
         return (
           <div
             id={instancePopupID}
-            className={`${prefixCls}-popup`}
+            className={cs(`${prefixCls}-popup`, { [`${prefixCls}-rtl-popup`]: rtl })}
             style={{
               maxHeight:
                 props.treeProps?.height || props.treeProps?.virtualListProps?.height ? 'unset' : '',
@@ -291,6 +321,7 @@ const TreeSelect: ForwardRefRenderFunction<
         : props.triggerElement || (
             <SelectView
               ref={refSelectView}
+              rtl={rtl}
               ariaControls={instancePopupID}
               {...props}
               popupVisible={popupVisible}
@@ -301,20 +332,22 @@ const TreeSelect: ForwardRefRenderFunction<
               prefixCls={prefixCls}
               isMultiple={multiple}
               renderText={renderText}
+              onSort={tryUpdateSelectValue}
               onRemoveCheckedItem={handleRemoveCheckedItem}
               onClear={(e) => {
                 e.stopPropagation();
                 triggerChange([], {});
-                props.onClear && props.onClear(!!popupVisible);
+                props.onClear?.(!!popupVisible);
               }}
               onKeyDown={(e) => {
                 e.stopPropagation();
+                props.onKeyDown?.(e);
               }}
               onFocus={(e) => {
                 e && e.stopPropagation();
               }}
-              onChangeInputValue={(input) => {
-                setInputValue(input);
+              onChangeInputValue={(value) => {
+                tryUpdateInputValue(value, 'manual');
               }}
             />
           )}

@@ -1,4 +1,4 @@
-import React, { useEffect, useContext, forwardRef, useRef, useMemo } from 'react';
+import React, { useEffect, useContext, ReactNode, forwardRef, useRef, useMemo } from 'react';
 import cs from '../_util/classNames';
 import Item from './item';
 import ItemGroup from './item-group';
@@ -14,11 +14,9 @@ import IconMenuFold from '../../icon/react-icon/IconMenuFold';
 import IconMenuUnfold from '../../icon/react-icon/IconMenuUnfold';
 import useForceUpdate from '../_util/hooks/useForceUpdate';
 import MenuContext from './context';
-import { useHotkeyListener } from './hotkey';
 import useMergeProps from '../_util/hooks/useMergeProps';
-
-// Generate DOM id for instance
-let globalMenuIndex = 0;
+import useKeyboardEvent from '../_util/hooks/useKeyboardEvent';
+import useId from '../_util/hooks/useId';
 
 const DEFAULT_THEME: MenuProps['theme'] = 'light';
 
@@ -29,7 +27,7 @@ const defaultProps: MenuProps = {
 };
 
 function Menu(baseProps: MenuProps, ref) {
-  const { getPrefixCls, componentConfig } = useContext(ConfigContext);
+  const { getPrefixCls, componentConfig, rtl } = useContext(ConfigContext);
   const props = useMergeProps<MenuProps>(baseProps, defaultProps, componentConfig?.Menu);
   const {
     style,
@@ -83,32 +81,15 @@ function Menu(baseProps: MenuProps, ref) {
   const refSubMenuKeys = useRef<string[]>([]);
   const refPrevSubMenuKeys = useRef<string[]>([]);
   const forceUpdate = useForceUpdate();
+  const getKeyboardEvents = useKeyboardEvent();
 
   const menuInfoMap = useMemo(() => {
     return generateInfoMap(children);
   }, [children]);
 
-  // Unique ID of this select instance
-  const instanceId = useMemo<string>(() => {
-    if (rest.id) {
-      return rest.id;
-    }
-
-    const id = `${prefixCls}-${globalMenuIndex}`;
-    globalMenuIndex++;
-    return id;
-  }, [rest.id]);
-
-  const {
-    hotkeyInfo,
-    listener: hotkeyListener,
-    clear: clearHotkeyInfo,
-  } = useHotkeyListener({
-    openKeys,
-    selectedKeys,
-    menuInfoMap,
-    needPause: () => mergedCollapse,
-  });
+  // Unique ID of this instance
+  const _instanceId = useId(`${prefixCls}-`);
+  const instanceId = rest.id || _instanceId;
 
   // autoOpen 时，初次渲染展开所有的子菜单
   useEffect(() => {
@@ -128,10 +109,15 @@ function Menu(baseProps: MenuProps, ref) {
     mode !== 'horizontal' && mode !== 'popButton' && !inDropdown && hasCollapseButton;
 
   const renderChildren = () => {
-    const childrenList = processChildren(children, { level: 1 });
+    const childrenList = processChildren(children, { level: 1 }) as ReactNode[];
     const collapseIcon = collapse
       ? (icons && icons.collapseActive) || <IconMenuUnfold />
       : (icons && icons.collapseDefault) || <IconMenuFold />;
+    const collapseButtonClickHandler = () => {
+      const newCollapse = !collapse;
+      setCollapse(newCollapse);
+      onCollapseChange && onCollapseChange(newCollapse);
+    };
 
     return (
       <>
@@ -150,11 +136,8 @@ function Menu(baseProps: MenuProps, ref) {
             aria-controls={instanceId}
             aria-expanded={!collapse}
             className={`${prefixCls}-collapse-button`}
-            onClick={() => {
-              const newCollapse = !collapse;
-              setCollapse(newCollapse);
-              onCollapseChange && onCollapseChange(newCollapse);
-            }}
+            onClick={collapseButtonClickHandler}
+            {...getKeyboardEvents({ onPressEnter: collapseButtonClickHandler })}
           >
             {collapseIcon}
           </div>
@@ -172,7 +155,6 @@ function Menu(baseProps: MenuProps, ref) {
     <div
       id={mergedHasCollapseButton ? instanceId : undefined}
       role="menu"
-      tabIndex={1}
       {...omit(rest, ['isMenu'])}
       ref={ref}
       style={usedStyle}
@@ -185,10 +167,10 @@ function Menu(baseProps: MenuProps, ref) {
           // 缩起状态自动变成 pop 模式
           [`${prefixCls}-pop`]: mode === 'pop' || mergedCollapse,
           [`${prefixCls}-pop-button`]: mode === 'popButton',
+          [`${prefixCls}-rtl`]: rtl,
         },
         className
       )}
-      onKeyDown={hotkeyListener}
     >
       <MenuContext.Provider
         value={{
@@ -207,8 +189,6 @@ function Menu(baseProps: MenuProps, ref) {
           // pass props directly
           id: instanceId,
           prefixCls,
-          hotkeyInfo: 'hotkeyInfo' in menuContext ? menuContext.hotkeyInfo : hotkeyInfo,
-          clearHotkeyInfo,
           collectInlineMenuKeys: (key, unmount) => {
             if (unmount) {
               refSubMenuKeys.current = refSubMenuKeys.current.filter((x) => x !== key);

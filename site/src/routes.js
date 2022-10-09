@@ -5,6 +5,7 @@ const Palette = lazyLoad(() => import('./pages/palette'));
 const Version = lazyLoad(() => import('./pages/changelog/v2'));
 const Icon = lazyLoad(() => import('./pages/icon'));
 const OverView = lazyLoad(() => import('./pages/overview'));
+const Token = lazyLoad(() => import('./pages/token'));
 
 export default function getRoutes(lang = 'zh', t) {
   const suffix = lang === 'zh-CN' ? '.zh-CN' : '.en-US';
@@ -29,6 +30,11 @@ export default function getRoutes(lang = 'zh', t) {
           name: t['routes.palette'],
           path: 'docs/palette',
           component: Palette,
+        },
+        {
+          name: t['routes.token'],
+          path: 'docs/token',
+          component: Token,
         },
         {
           name: t['routes.i18n'],
@@ -775,6 +781,11 @@ export default function getRoutes(lang = 'zh', t) {
               path: 'material/qa',
               component: lazyLoad(() => import(`../docs/material/start.qa${suffix}.md`)),
             },
+            {
+              name: t['routes.material.spec'],
+              path: 'material/spec',
+              component: lazyLoad(() => import(`../docs/material/start.spec${suffix}.md`)),
+            },
           ],
         },
         {
@@ -831,7 +842,7 @@ export default function getRoutes(lang = 'zh', t) {
             {
               name: t['routes.material.command'],
               path: 'material/command',
-              component: lazyLoad(() => import(`../docs/material/advanced.command.zn-CN.md`)),
+              component: lazyLoad(() => import(`../docs/material/advanced.command${suffix}.md`)),
             },
             {
               name: t['routes.material.develop-template'],

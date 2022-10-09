@@ -23,7 +23,8 @@
       color: @breadcrumb-color-icon;
     }
 
-    a {
+    a,
+    &[href] {
       display: inline-block;
       border-radius: @breadcrumb-border-text-radius_hover;
       padding: 0 @breadcrumb-padding-text-horizontal;
@@ -72,5 +73,12 @@
         transform: rotate(180deg);
       }
     }
+  }
+}
+
+.@{breadcrumb-prefix-cls}-rtl {
+  .@{breadcrumb-prefix-cls}-item-dropdown-icon {
+    margin-left: 0;
+    margin-right: @breadcrumb-margin-dropdown-icon-left;
   }
 }

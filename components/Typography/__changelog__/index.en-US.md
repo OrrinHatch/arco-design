@@ -1,3 +1,43 @@
+## 2.39.3
+
+2022-09-02
+
+### 🐛 BugFix
+
+- Fixed a bug where the `Typography` component would jitter in the folding calculation([#1366](https://github.com/arco-design/arco-design/pull/1366))
+
+## 2.37.1
+
+2022-07-14
+
+### 🐛 BugFix
+
+- Fix the problem of `Typography` text omission under different text styles such as `underline`([#1137](https://github.com/arco-design/arco-design/pull/1137))
+
+## 2.37.0
+
+2022-07-08
+
+### 💅 Style
+
+- The `Typography` default style adds `white-space: 'normal'` to remove the parent element's effect on ellipsis.([#1109](https://github.com/arco-design/arco-design/pull/1109))
+
+## 2.34.0
+
+2022-05-27
+
+### 💎 Enhancement
+
+- Reduce the number of computations for `Typography` on first render([#935](https://github.com/arco-design/arco-design/pull/935))
+
+## 2.33.1
+
+2022-05-20
+
+### 🐛 BugFix
+
+- Fixed the bug that the `Expand/Collapse` button of the `Typography` component was displayed at the wrong time([#890](https://github.com/arco-design/arco-design/pull/890))
+
 ## 2.33.0
 
 2022-05-13

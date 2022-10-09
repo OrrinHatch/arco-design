@@ -6,6 +6,10 @@
   position: relative;
   box-sizing: border-box;
 
+  &-rtl {
+    direction: rtl;
+  }
+
   .span(@span, @adaptation) when (@span >= 0) {
     .span((@span - 1), @adaptation);
 
@@ -13,6 +17,7 @@
 
     &@{usedAdaptation}-@{span} {
       .col-style(@span) when (@span > 0) {
+        display: block;
         width: (100% / 24) * @span;
         flex: 0 0 (100% / 24) * @span;
       }
@@ -32,6 +37,11 @@
 
     &@{usedAdaptation}-offset-@{offset} {
       margin-left: (100% / 24) * @offset;
+    }
+
+    &@{usedAdaptation}-offset-@{offset}&-rtl {
+      margin-left: 0;
+      margin-right: (100% / 24) * @offset;
     }
   }
 
@@ -53,6 +63,11 @@
     &@{usedAdaptation}-pull-@{count} {
       right: (100% / 24) * @count;
     }
+
+    &@{usedAdaptation}-pull-@{count}&-rtl {
+      right: unset;
+      left: (100% / 24) * @count;
+    }
   }
 
   .push(@count, @adaptation) when (@count >= 0) {
@@ -62,6 +77,11 @@
 
     &@{usedAdaptation}-push-@{count} {
       left: (100% / 24) * @count;
+    }
+
+    &@{usedAdaptation}-push-@{count}&-rtl {
+      left: unset;
+      right: (100% / 24) * @count;
     }
   }
 
@@ -116,5 +136,13 @@
     .order(24, xxl);
     .pull(24, xxl);
     .push(24, xxl);
+  }
+
+  @media (min-width: 2000px) {
+    .span(24, xxxl);
+    .offset(23, xxxl);
+    .order(24, xxxl);
+    .pull(24, xxxl);
+    .push(24, xxxl);
   }
 }

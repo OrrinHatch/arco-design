@@ -222,6 +222,19 @@ export interface ConfigProviderProps {
     modal?: boolean | { autoFocus?: boolean };
     drawer?: boolean | { autoFocus?: boolean };
   };
+  /**
+   * @zh 视图的表现形式是从右开始向左结束。
+   * @en View starts from the right and ends on the left.
+   * @version 2.36.0
+   */
+  rtl?: boolean;
+  /**
+   * @zh 是否全局设置所有 `Message` 和 `Notification` 的配置。如果用了 `useMessage` 的 hook 局部设置请设置为 false
+   * @en Whether to update the configuration of all `Message` and `Notification` with one click. Set to false if using the hook locale of `useMessage`
+   * @defaultValue true
+   * @version 2.40.0
+   */
+  effectGlobalNotice?: boolean;
   zIndex?: number;
   children?: ReactNode;
 }

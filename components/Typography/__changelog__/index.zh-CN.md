@@ -1,3 +1,43 @@
+## 2.39.3
+
+2022-09-02
+
+### 🐛 问题修复
+
+- 修复 `Typography` 组件在折叠计算中会出现抖动情况的 bug([#1366](https://github.com/arco-design/arco-design/pull/1366))
+
+## 2.37.1
+
+2022-07-14
+
+### 🐛 问题修复
+
+- 修复 `Typography` 组件 `underline` 等不同文本样式下文字省略问题([#1137](https://github.com/arco-design/arco-design/pull/1137))
+
+## 2.37.0
+
+2022-07-08
+
+### 💅 样式更新
+
+- `Typography` 默认样式添加 `white-space: 'normal'` 以消除父元素对省略影响。([#1109](https://github.com/arco-design/arco-design/pull/1109))
+
+## 2.34.0
+
+2022-05-27
+
+### 💎 功能优化
+
+- 减少 `Typography` 首次渲染时的计算次数([#935](https://github.com/arco-design/arco-design/pull/935))
+
+## 2.33.1
+
+2022-05-20
+
+### 🐛 问题修复
+
+- 修复 `Typography` 组件 `展开/折叠` 按钮展示时机错误的bug([#890](https://github.com/arco-design/arco-design/pull/890))
+
 ## 2.33.0
 
 2022-05-13
